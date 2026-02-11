@@ -100,11 +100,22 @@ impl KV {
                 Ok(KVResult::Delete)
             },
             Command::Has { key } => {
+                let expired = match kvstore.get(key) {
+                    Some(kv_value) => kv_value.expires_at.map_or(false, |expires_at| has_passed(expires_at)),
+                    None => {
+                        return Ok(KVResult::Has { has: false } );
+                    }
+                };
+                if expired {
+                    let _ = KV::build(&Command::Delete { key: key.clone() }, file, kvstore);
+                    return Ok(KVResult::Has { has: false } );
+                }
+                
                 if let Some(kv_value) = kvstore.get(key) {
                     println!("{} -> {:?}", key, String::from_utf8(kv_value.value.clone().unwrap()));
                 }
                 else {
-                    println!("false");
+                    return Ok(KVResult::Has { has: false } );
                 }
 
                 Ok(KVResult::Has { has: true })

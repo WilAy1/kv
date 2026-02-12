@@ -5,5 +5,6 @@ pub enum Command {
     Delete { key: String },
     Has { key: String },
     Persist { key: String },
-    Touch { key: String, ttl: u64 }
+    Touch { key: String, ttl: u64 },
+    Ttl { key: String }
 }

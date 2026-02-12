@@ -57,6 +57,10 @@ fn main() {
             .expect("Failed to read line");
         let cmd = cmd.trim();
 
+        if cmd == "exit" {
+            break;
+        }
+
         let re = Regex::new(r"^(\S+)\s+(\S+)(?:\s+(.+?))?(?:\s+(\d+))?$").unwrap();
         if let Some(caps) = re.captures(cmd) {
             let args: Vec<String> = caps.iter()
@@ -73,12 +77,11 @@ fn main() {
                     continue;
                 }
             };
-            let _ = KV::build(&cmd, &mut log, &mut kvstore);
+            let result = KV::build(&cmd, &mut log, &mut kvstore);
+            println!("{:?}", result);
         }
 
-        // if cmd == "exit" {
-        //     break;
-        // }
+       
 
         // let args: Vec<String> = cmd.split(' ').map(|val| val.to_string()).collect();
         // let command = Config::build_with_loop(&args);

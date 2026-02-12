@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, fs::{File, OpenOptions}, io::{ BufRea
 use serde::{Deserialize, Serialize};
 use serde_json::{Error};
 
-use crate::command::Command;
+use crate::{command::Command, time::time_remaining};
 use crate::error::KVError;
 use crate::time::has_passed;
 
@@ -29,6 +29,7 @@ pub enum KVResult {
     Has { has: bool },
     Persist,
     Touch,
+    Ttl { time_left: Option<u64> }
 }
 
 
@@ -111,14 +112,15 @@ impl KV {
                     return Ok(KVResult::Has { has: false } );
                 }
                 
-                if let Some(kv_value) = kvstore.get(key) {
-                    println!("{} -> {:?}", key, String::from_utf8(kv_value.value.clone().unwrap()));
+                if let Some(_) = kvstore.get(key) {
+                    //println!("{} -> {:?}", key, String::from_utf8(kv_value.value.clone().unwrap()));
+                    return Ok(KVResult::Has { has: true });
                 }
                 else {
                     return Ok(KVResult::Has { has: false } );
                 }
 
-                Ok(KVResult::Has { has: true })
+                // Ok(KVResult::Has { has: true })
             },
             Command::Persist { key } => {
                 if let Ok(kv_result) = KV::build(&Command::Get { key: key.clone() }, file, kvstore) {
@@ -141,7 +143,7 @@ impl KV {
                                 };    
                             }    
                         },
-                        _ => {println!("code"); return Ok(KVResult::Persist)}
+                        _ => {return Ok(KVResult::Persist)}
                     }
                 }                    
                 
@@ -174,12 +176,28 @@ impl KV {
                             };        
                         }
                         },
-                        _ => {println!("code"); return Ok(KVResult::Touch)}
+                        _ => {return Ok(KVResult::Touch)}
                     }
                 }                    
                 
                 Ok(KVResult::Touch)
             },
+            Command::Ttl { key } => {
+
+                match KV::build(&Command::Get { key: key.clone() }, file, kvstore)? { 
+                    KVResult::Get { value } => {
+                        if let Some(kv_value) = value {
+                            if let Some(expires_at) = kv_value.expires_at {
+                                return Ok(KVResult::Ttl { time_left: Some(time_remaining( expires_at)) });
+                            }
+                        }
+                    },
+                    _ => return Ok(KVResult::Ttl { time_left: None })
+                 }
+
+                Ok(KVResult::Ttl { time_left: None })
+                
+            }
         }
     }
 

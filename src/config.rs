@@ -31,6 +31,7 @@ impl Config {
             "has" | "exists" => Command::Has { key: args[3].clone() }, // Check if exists
             "touch" => Command::Touch { key: args[3].clone(), ttl: args[4].trim().parse::<u64>().unwrap() }, // Change Expiration
             "persist" => Command::Persist { key: args[3].clone() }, // Remove Expiration
+            "ttl" => Command::Ttl { key: args[3].clone() },
 
             _ => return Err(format!("Invalid command provided"))
         };
@@ -65,6 +66,7 @@ impl Config {
             "has" | "exists" => Command::Has { key: args[1].clone() },
             "touch" => Command::Touch { key: args[1].clone(), ttl: args[2].trim().parse::<u64>().unwrap() },
             "persist" => Command::Persist { key: args[1].clone() },
+            "ttl" => Command::Ttl { key: args[1].clone() },
             "exit" => exit(0),
             _ => return Err(format!("Invalid command provided"))
         };
